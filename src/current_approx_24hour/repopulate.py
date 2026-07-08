@@ -41,9 +41,31 @@ def fetch_current_scores(post_ids, reddit, sleep=0.3):
 
     return pd.DataFrame(results)
 
+def fetch_selftext(post_ids, reddit, sleep=0.3):
+    results = []
+
+    for pid in tqdm(post_ids):
+        try:
+            submission = reddit.submission(id=pid)
+
+            results.append({
+                "post_id": pid,
+                "selftext": submission.selftext
+            })
+
+            time.sleep(sleep)
+
+        except Exception as e:
+            results.append({
+                "post_id": pid,
+                "selftext": None,
+                "error": str(e)
+            })
+
+    return pd.DataFrame(results)
+
 df = pd.read_csv("data/posts_by_time.csv")
 post_ids = df["post_id"].dropna().unique().tolist()
 
-df_current = fetch_current_scores(post_ids, reddit=preparation())
-
-df_current.to_csv('data/check_posts_now.csv')
+df_selftext = fetch_selftext(post_ids, reddit=preparation())
+df_selftext.to_csv('data/post_selftext.csv', index=False)
